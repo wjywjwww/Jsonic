@@ -16,7 +16,14 @@ public enum OutputType {
         var isJsonPropertyEnable: Bool
     }
     
-    case swift
+    public struct SwiftConfig {
+        /// 结构体
+        var isStruct: Bool
+        /// 类
+        var isClass: Bool
+    }
+    
+    case swift(config: SwiftConfig)
     case kotlin(config: KotlinConfig)
     case java
     
@@ -36,15 +43,20 @@ public enum OutputType {
         switch self {
         case .kotlin(let config):
             return kotlinObjectDesc(name: name, properties: properties, config: config)
-        case .swift:
-            return swiftObjectDesc(name: name, properties: properties)
+        case .swift(let config):
+            return swiftObjectDesc(name: name, properties: properties, config: config)
         case .java:
             return javaObjectDesc(name: name, properties: properties)
         }
     }
     
-    private func swiftObjectDesc(name: String, properties: [Jsonic.PropertyDefine]) -> String {
-        var text = "class \(name): Codable {\n"
+    private func swiftObjectDesc(name: String, properties: [Jsonic.PropertyDefine],config:SwiftConfig) -> String {
+        var text = ""
+        if config.isClass {
+            text = "class \(name): HandyJSON {\n"
+        }else{
+            text = "struct \(name): HandyJSON {\n"
+        }
         for property in properties {
             text += "    var \(property.name): \(property.type.swiftDescription)?\n"
         }

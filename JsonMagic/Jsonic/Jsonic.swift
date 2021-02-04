@@ -51,11 +51,11 @@ public class Jsonic: NSObject, Logable {
             case .string:
                 return "String"
             case .int:
-                return "Int"
+                return "String"
             case .long:
-                return "Int64"
+                return "String"
             case .double:
-                return "Double"
+                return "String"
             case .bool:
                 return "Bool"
             case .unknown:
@@ -63,7 +63,7 @@ public class Jsonic: NSObject, Logable {
             case .object(let name, _):
                 return name
             case .array(let itemType):
-                return "Array<" + itemType.swiftDescription + ">"
+                return "[" + itemType.swiftDescription + "]"
             }
         }
         

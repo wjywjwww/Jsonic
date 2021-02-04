@@ -23,7 +23,7 @@ extension ViewController: NSTextViewDelegate {
 
 class ViewController: NSViewController {
     enum TransferType {
-        case jsonToSwift, jsonToKotlin, jsonToJava, kotlinToSwift
+        case jsonToSwiftWithStruct,jsonToSwiftWithClass, jsonToKotlin, jsonToJava, kotlinToSwift
     }
     
     @IBOutlet var inputTv: NSTextView!
@@ -37,9 +37,11 @@ class ViewController: NSViewController {
     @IBOutlet weak var jsonToJavaBtn: NSButton!
     @IBOutlet weak var serializedBtn: NSButton!
     @IBOutlet weak var jsonPropertyBtn: NSButton!
+    @IBOutlet weak var swiftStructBtn: NSButton!
+    @IBOutlet weak var swiftClassBtn: NSButton!
     
     private var jsonic: Jsonic!
-    private var transferType = TransferType.jsonToSwift
+    private var transferType = TransferType.jsonToSwiftWithStruct
     private var outputType: OutputType {
         switch transferType {
         case .jsonToKotlin:
@@ -47,8 +49,12 @@ class ViewController: NSViewController {
         case .jsonToJava:
             return .java
         default:
-            return .swift
+            return .swift(config: outputSwiftConfig)
         }
+    }
+    private var outputSwiftConfig: OutputType.SwiftConfig {
+        return OutputType.SwiftConfig(isStruct: swiftStructBtn.state == .on,
+                                      isClass: swiftClassBtn.state == .on )
     }
     private var outputKotlinConfig: OutputType.KotlinConfig {
         return OutputType.KotlinConfig(isSerializedNameEnable: serializedBtn.state == .on,
@@ -67,7 +73,7 @@ class ViewController: NSViewController {
 
     @IBAction func run(_ sender: NSButton) {
         switch transferType {
-        case .jsonToSwift, .jsonToKotlin, .jsonToJava:
+        case .jsonToKotlin, .jsonToJava,.jsonToSwiftWithStruct,.jsonToSwiftWithClass:
             doJsonic()
         case .kotlinToSwift:
             doSwifty()
@@ -77,8 +83,10 @@ class ViewController: NSViewController {
     @IBAction func radioClicked(_ sender: NSObject) {
         if kotlinToSwiftBtn == sender {
             transferType = TransferType.kotlinToSwift
-        } else if jsonToSwiftBtn == sender {
-            transferType = TransferType.jsonToSwift
+        } else if jsonToSwiftBtn == sender && swiftStructBtn.state == .on {
+            transferType = TransferType.jsonToSwiftWithStruct
+        }else if jsonToSwiftBtn == sender && swiftClassBtn.state == .on {
+            transferType = TransferType.jsonToSwiftWithClass
         } else if jsonToJavaBtn == sender {
             transferType = TransferType.jsonToJava
         } else if jsonToKotlinBtn == sender {
@@ -115,8 +123,12 @@ class ViewController: NSViewController {
     private func updateTransferType() {
         [jsonToKotlinBtn, jsonToSwiftBtn, kotlinToSwiftBtn].forEach({ $0?.state = .off })
         switch transferType {
-        case .jsonToSwift:
+        case .jsonToSwiftWithStruct:
             jsonToSwiftBtn.state = .on
+            swiftStructBtn.state = .on
+        case .jsonToSwiftWithClass:
+            jsonToSwiftBtn.state = .on
+            swiftClassBtn.state = .on
         case .jsonToKotlin:
             jsonToKotlinBtn.state = .on
         case .jsonToJava:
@@ -124,9 +136,21 @@ class ViewController: NSViewController {
         case .kotlinToSwift:
             kotlinToSwiftBtn.state = .on
         }
-        
         [serializedBtn, jsonPropertyBtn].forEach( { $0?.isEnabled = jsonToKotlinBtn.state == .on } )
     }
+    @IBAction func swiftTypeAction(_ sender: NSButton) {
+        if sender ==  swiftStructBtn{
+            transferType = .jsonToSwiftWithStruct
+            swiftStructBtn.state = .on
+            swiftClassBtn.state = .off
+        }else if sender == swiftClassBtn{
+            transferType = .jsonToSwiftWithClass
+            swiftStructBtn.state = .off
+            swiftClassBtn.state = .on
+        }
+    }
+    
+    
     
     private func updateOutputText(text: String) {
         outputTv.string = text
